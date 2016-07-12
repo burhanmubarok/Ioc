@@ -8,11 +8,25 @@ namespace Ioc
         {
             ICreditCard creditCard = new MasterCard();
             ICreditCard otherCreditCard = new Visa();
-            var shopper = new Shopper(otherCreditCard);
+
+            Resolver resolver = new Resolver();
+            var shopper = new Shopper(resolver.ResolveCreditCard());
+            //var shopper = new Shopper(otherCreditCard);
             shopper.Charge();
             Console.ReadKey();
         }
 
+
+        public class Resolver
+        {
+            public ICreditCard ResolveCreditCard()
+            {
+                if (new Random().Next(2) == 1)
+                    return new Visa();
+
+                return new MasterCard();
+            }
+        }
         public class Shopper
         {
             private readonly ICreditCard _creditCard;
