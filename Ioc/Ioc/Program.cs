@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Ioc
 {
@@ -6,12 +8,18 @@ namespace Ioc
     {
         static void Main(string[] args)
         {
-            ICreditCard creditCard = new MasterCard();
-            ICreditCard otherCreditCard = new Visa();
+            //ICreditCard creditCard = new MasterCard();
+            //ICreditCard otherCreditCard = new Visa();
 
             Resolver resolver = new Resolver();
-            var shopper = new Shopper(resolver.ResolveCreditCard());
+            //var shopper = new Shopper(resolver.ResolveCreditCard());
             //var shopper = new Shopper(otherCreditCard);
+
+            resolver.Register<Shopper, Shopper>();
+            //resolver.Register<ICreditCard, MasterCard>();
+            resolver.Register<ICreditCard, Visa>();
+
+            var shopper = resolver.Resolve<Shopper>();
             shopper.Charge();
             Console.ReadKey();
         }
@@ -19,12 +27,46 @@ namespace Ioc
 
         public class Resolver
         {
-            public ICreditCard ResolveCreditCard()
-            {
-                if (new Random().Next(2) == 1)
-                    return new Visa();
+            //public ICreditCard ResolveCreditCard()
+            //{
+            //    if (new Random().Next(2) == 1)
+            //        return new Visa();
 
-                return new MasterCard();
+            //    return new MasterCard();
+            //}
+            public Dictionary<Type, Type> dependencyMap = new Dictionary<Type, Type>();
+            public T Resolve<T>()
+            {
+                return (T)Resolve(typeof (T));
+            }
+
+            public object Resolve(Type typeToResolve)
+            {
+                Type resolvedType = null;
+                try
+                {
+                    resolvedType = dependencyMap[typeToResolve];
+                }
+                catch (Exception)
+                {
+                    throw new Exception(string.Format("Could not resolve type {0}", typeToResolve.FullName));
+                }
+                var firstConstructor = resolvedType.GetConstructors().First();
+                var constructorParameter = firstConstructor.GetParameters();
+                if (!constructorParameter.Any())
+                    return Activator.CreateInstance(resolvedType);
+                IList<object> parameters = new List<object>();
+                foreach (var parameterToResolve in constructorParameter)
+                {
+                    parameters.Add(Resolve(parameterToResolve.ParameterType));
+                }
+
+                return firstConstructor.Invoke(parameters.ToArray());
+            }
+
+            public void Register<Tfrom, Tto>()
+            {
+                dependencyMap.Add(typeof(Tfrom), typeof(Tto));
             }
         }
         public class Shopper
