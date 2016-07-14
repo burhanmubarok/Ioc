@@ -16,8 +16,8 @@ namespace Ioc
             //var shopper = new Shopper(otherCreditCard);
 
             resolver.Register<Shopper, Shopper>();
-            //resolver.Register<ICreditCard, MasterCard>();
-            resolver.Register<ICreditCard, Visa>();
+            resolver.Register<ICreditCard, MasterCard>();
+            //resolver.Register<ICreditCard, Visa>();
 
             var shopper = resolver.Resolve<Shopper>();
             shopper.Charge();
@@ -73,6 +73,10 @@ namespace Ioc
         {
             private readonly ICreditCard _creditCard;
 
+            public Shopper()
+            {
+                
+            }
             public Shopper(ICreditCard creditCard)
             {
                 _creditCard = creditCard;
